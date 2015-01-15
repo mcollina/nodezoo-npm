@@ -10,7 +10,7 @@ require('seneca')()
   // disabled as not compatible with seneca 0.6 yet
   //.use('jsonfile-store')
   .use('mem-store',{web:{dump:true}})
-  .use('collector', { host: influxIP, database: 'stats', seriesName: 'actions' })
+  .use('collector', { host: influxIP, database: 'stats', seriesName: 'actions', username: 'root', password: 'root', port: '8086' })
   .use('../npm.js')
   .add('role:info,req:part',function(args,done){
     done();
