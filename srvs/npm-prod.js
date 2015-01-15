@@ -1,9 +1,16 @@
 'use strict';
 
+var redisIP = process.env.REDIS_IP || 'localhost';
+var beanstakIP = process.env.BEANSTALK_IP || 'localhost';
+var influxIP = process.env.INFLUX_IP || 'localhost';
+
 require('seneca')()
   .use('redis-transport')
   .use('beanstalk-transport')
-  .use('jsonfile-store')
+  // disabled as not compatible with seneca 0.6 yet
+  //.use('jsonfile-store')
+  .use('mem-store',{web:{dump:true}})
+  .use('collector', { host: influxIP })
   .use('../npm.js')
   .add('role:info,req:part',function(args,done){
     done();
@@ -12,8 +19,8 @@ require('seneca')()
       this.act('role:info,res:part,part:npm', {name:args.name,data:mod.data$()});
     });
   })
-  .listen({host: process.env.REDIS_IP, type:'redis',pin:'role:info,req:part'})
-  .client({host: process.env.REDIS_IP, type:'redis',pin:'role:info,res:part'})
-  .listen({host: process.env.BEANSTALK_IP, port: 1130, type: 'beanstalk', pin: 'role:npm,cmd:*'})
-  .client({host: process.env.BEANSTALK_IP, port: 1130, type: 'beanstalk', pin: 'role:search,cmd:*'});
+  .listen({host: redisIP, type:'redis',pin:'role:npm,req:part'})
+  .client({host: redisIP, type:'redis',pin:'role:search,res:part'})
+  .listen({host: beanstakIP, port: 1130, type: 'beanstalk', pin: 'role:npm,cmd:*'})
+  .client({host: beanstakIP, port: 1130, type: 'beanstalk', pin: 'role:search,cmd:*'});
 
